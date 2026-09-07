@@ -1,16 +1,65 @@
 import os
 import shutil
+from typing import Optional, Tuple
 import amr_functions as amr
 
 # ================= CONSTANTS & VARIABLES =================
-SCRIPT_NAME = "Covers Renamer"
-VERSION = "2.026.07"
+SCRIPT_NAME: str = "Covers Renamer"
+VERSION: str = "2.026.07"
 
-ROOT_FOLDER = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
-ORIGINAL_COVERS_FOLDER = '/Users/mushroomoff/Yandex.Disk.localized/Проекты/_Covers/_BIG'
+ROOT_FOLDER: str = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
+ORIGINAL_COVERS_FOLDER: str = '/Users/mushroomoff/Yandex.Disk.localized/Проекты/_Covers/_BIG'
 
-# ================= FUNCTIONS =================
-def main():
+
+def parse_cover_filename(filename: str) -> Optional[Tuple[str, str, str]]:
+    """
+    Parse a cover filename to extract band, album, and year components.
+    
+    Args:
+        filename: The filename to parse (without extension).
+    
+    Returns:
+        A tuple of (band_name, album_name, year) if successful, None otherwise.
+    """
+    text_block_count = filename.count(' - ')
+    
+    # If the filename contains 2 or 3 ' - ' split into components
+    if text_block_count == 2:
+        name_band, name_album, name_year = filename.split(' - ')
+        return (name_band, name_album, name_year)
+    elif text_block_count == 3:
+        name_band, name_album, name_type, name_year = filename.split(' - ')
+        name_album = f'{name_album} [{name_type}]'
+        return (name_band, name_album, name_year)
+    else:
+        return None
+
+
+def get_band_folder_prefix(band_name: str) -> str:
+    """
+    Determine the folder prefix based on the first character of the band name.
+    
+    Args:
+        band_name: The name of the band.
+    
+    Returns:
+        A string representing the folder prefix (A-Z, Русское, or 0).
+    """
+    first_char = str(band_name[0]).upper()
+    char_code = ord(first_char)
+    
+    # Cyrillic letter range
+    if 1025 <= char_code <= 1105:
+        return 'Русское'
+    # Non-alphabetical character
+    elif char_code < 65:
+        return '0'
+    
+    return first_char
+
+
+def main() -> None:
+    """Main entry point for the Covers Renamer script."""
     amr.print_name(SCRIPT_NAME, VERSION)
 
     # Prompt user for a path, if nothing is entered, use the original covers folder
@@ -23,48 +72,35 @@ def main():
         # Check if the file is a JPG or JPEG
         is_jpg = '.jpg' in check_file.lower()
         is_jpeg = '.jpeg' in check_file.lower()
+        
         if is_jpg or is_jpeg:
-            error_mark = False
-            text_block_count = check_file.count(' - ')
-
-            # If the file name contains 2 or 3 ' - ' split the file name into band, album, and other parts
-            if text_block_count == 2:
-                name_band, name_album, name_year = check_file.split(' - ')
-            elif text_block_count == 3:
-                name_band, name_album, name_type, name_year = check_file.split(' - ')
-                name_album = f'{name_album} [{name_type}]'
-            else:
-                error_mark = True
+            # Remove extension for parsing
+            filename_without_ext = check_file.rsplit('.', 1)[0]
+            
+            parsed_result = parse_cover_filename(filename_without_ext)
+            
+            if parsed_result is None:
                 print(f'ERROR: {check_file}')
+                continue
+            
+            name_band, name_album, name_year = parsed_result
+            name_band_folder = get_band_folder_prefix(name_band)
+            
+            # Determine extension
+            new_filename_extension = '.jpg' if is_jpg else '.jpeg'
+            
+            new_filename = f'{name_year[:4]} {name_album}{new_filename_extension}'
+            new_directory = os.path.join(covers_folder, name_band_folder, name_band)
+            current_file = os.path.join(covers_folder, check_file)
+            new_file = os.path.join(new_directory, new_filename)
 
-            # If no errors were found, proceed with the file renaming and moving
-            if not error_mark:
-                name_band_folder = str(name_band[0]).upper()
+            # If the directory does not exist, create it
+            if not os.path.exists(new_directory):
+                os.makedirs(new_directory)
 
-                # If the band name starts with a Cyrillic letter, set the band letter to 'Русское'
-                if 1025 <= ord(name_band_folder) <= 1105:
-                    name_band_folder = 'Русское'
-                # If the band name starts with a non-alphabetical character, set the band letter to '0'
-                elif ord(name_band_folder) < 65:
-                    name_band_folder = '0'
-
-                if is_jpg:
-                    new_filename_extension = '.jpg'
-                elif is_jpeg:
-                    new_filename_extension = '.jpeg'
-
-                new_filename = f'{name_year[:4]} {name_album}{new_filename_extension}'
-                new_directory = os.path.join(covers_folder, name_band_folder, name_band)
-                current_file = os.path.join(covers_folder, check_file)
-                new_file = os.path.join(new_directory, new_filename)
-
-                # If the directory does not exist, create it
-                if not os.path.exists(new_directory):
-                    os.makedirs(new_directory)
-
-                # Move the file to the new directory
-                shutil.move(current_file, new_file)
-                print(f'FILE: {check_file} >>> GOTO: {name_band_folder}/{name_band}/{new_filename}')
+            # Move the file to the new directory
+            shutil.move(current_file, new_file)
+            print(f'FILE: {check_file} >>> GOTO: {name_band_folder}/{name_band}/{new_filename}')
 
 
 if __name__ == "__main__":

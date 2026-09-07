@@ -1,33 +1,40 @@
 import os
 import sqlite3
 import traceback
+from typing import Optional, List, Tuple, Any
 from dotenv import load_dotenv
 import amr_functions as amr
 
 # ================= CONSTANTS & VARIABLES =================
-SCRIPT_NAME = "Recommender"
-VERSION = "2.026.07"
-ENV = 'Local'
+SCRIPT_NAME: str = "Recommender"
+VERSION: str = "2.026.07"
+ENV: str = 'Local'
+
 if os.getenv("GITHUB_ACTIONS") == "true":
     ENV = 'GitHub'
 
+ROOT_FOLDER: str = ''
 if ENV == 'Local':
     ROOT_FOLDER = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
     load_dotenv(os.path.join(ROOT_FOLDER, '.env'))
-elif ENV == 'GitHub':
-    ROOT_FOLDER = ''
 
-TOKEN = os.environ['tg_token']
-CHAT_ID = os.environ['tg_channel_id']
-LOGGER_ID = os.environ['tg_logger_id']
+TOKEN: str = os.environ['tg_token']
+CHAT_ID: str = os.environ['tg_channel_id']
+LOGGER_ID: str = os.environ['tg_logger_id']
 
-AMR_FOLDER = os.path.join(ROOT_FOLDER, 'AMRs/')
-DB_FOLDER = os.path.join(ROOT_FOLDER, 'Databases/')
-DB_FILE = os.path.join(DB_FOLDER, 'music_releases.db')
+AMR_FOLDER: str = os.path.join(ROOT_FOLDER, 'AMRs/')
+DB_FOLDER: str = os.path.join(ROOT_FOLDER, 'Databases/')
+DB_FILE: str = os.path.join(DB_FOLDER, 'music_releases.db')
 
 # ================= DATABASE FUNCTIONS =================
 
-def get_empty_new_releases():
+def get_empty_new_releases() -> Optional[List[Tuple[Any, ...]]]:
+    """
+    Retrieve new releases that don't have a type assigned (my_type IS NULL).
+    
+    Returns:
+        List of tuples containing (row_id, update_date, artist, album) or None if error occurs.
+    """
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -41,7 +48,15 @@ def get_empty_new_releases():
         return None
 
 
-def get_recommended_releases():
+def get_recommended_releases() -> Optional[List[Tuple[Any, ...]]]:
+    """
+    Retrieve releases that are recommended (my_type IN ('v', 'd', 'o')) 
+    and haven't been sent to Telegram yet (tg_message_id = 0).
+    
+    Returns:
+        List of tuples containing (row_id, artist, album, my_type, 
+        album_link, album_link_ym, album_link_zv, cover_link) or None if error occurs.
+    """
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -60,8 +75,17 @@ def get_recommended_releases():
         return None
 
 
-def update_empty_new_release(row_id, new_type):
-    """Обновить ???"""
+def update_empty_new_release(row_id: Any, new_type: str) -> bool:
+    """
+    Update the my_type field for a release in the database.
+    
+    Args:
+        row_id: The row ID of the release to update.
+        new_type: The new type value to set.
+    
+    Returns:
+        True if successful, False otherwise.
+    """
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -71,13 +95,22 @@ def update_empty_new_release(row_id, new_type):
         conn.close()
         return True
     except Exception as e:
-        print(f'Error updating ??? {row_id}: {e}')
+        print(f'Error updating my_type for row {row_id}: {e}')
         traceback.print_exc()
         return False
 
 
-def update_tg_message_id(row_id, tg_message_id):
-    """Обновить ???"""
+def update_tg_message_id(row_id: Any, tg_message_id: int) -> bool:
+    """
+    Update the Telegram message ID for a release in the database.
+    
+    Args:
+        row_id: The row ID of the release to update.
+        tg_message_id: The Telegram message ID to store.
+    
+    Returns:
+        True if successful, False otherwise.
+    """
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -87,7 +120,7 @@ def update_tg_message_id(row_id, tg_message_id):
         conn.close()
         return True
     except Exception as e:
-        print(f'Error updating tg_message_id in {row_id}: {e}')
+        print(f'Error updating tg_message_id for row {row_id}: {e}')
         traceback.print_exc()
         return False
 
