@@ -1,0 +1,242 @@
+<head>
+  <meta charset="utf-8">
+  <title>Alternative & Metal Releases</title>
+  <link rel="stylesheet" type="text/css" href="Resources/styles.css" />
+  <link rel="stylesheet" type="text/css" href="Resources/index.css" />
+  <link rel="icon" href="Resources/favicon.ico">
+  <link rel="apple-touch-icon" href="Resources/touch-icon-iphone.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="Resources/touch-icon-ipad.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="Resources/touch-icon-iphone-retina.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="Resources/touch-icon-ipad-retina.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="Resources/touch-icon-ipad-retina.png">
+  <SCRIPT language=JavaScript type=text/JavaScript>
+    <!--
+    function show(id) {
+      if(document.getElementById("show" + id).style.display == 'none') {
+        document.getElementById("show" + id).style.display = 'table-row';
+      }else{
+        document.getElementById("show" + id).style.display = 'none';
+      }
+    }
+
+    function show_tr(id) {
+      var elms;
+      if (id=="v") {
+        elms = document.querySelectorAll("[id='v']");
+      } else if (id=="x") {
+        elms = document.querySelectorAll("[id='x']");
+      } else if (id=="d") {
+        elms = document.querySelectorAll("[id='d']");
+      } else if (id=="o") {
+        elms = document.querySelectorAll("[id='o']");
+      } else if (id=="") {
+        elms = document.querySelectorAll("[id='']");
+      }
+      for (var i = 0; i < elms.length; i++) {
+        if (elms[i].style.display == 'none') {
+          elms[i].style.display = 'table-row';
+        } else {
+          elms[i].style.display = 'none';
+        }
+      }
+    }
+    //--->
+  </SCRIPT>
+</head>
+
+<body>
+  <input id="bV" type="button" value="V" onclick="show_tr('v');" class="bV" />
+  <input id="bD" type="button" value="D" onclick="show_tr('d');" class="bD" />
+  <input id="bX" type="button" value="O" onclick="show_tr('o');" class="bO" />
+  <input id="bX" type="button" value="X" onclick="show_tr('x');" class="bX" />
+  <input id="bE" type="button" value="  " onclick="show_tr('');" class="bE" />
+  <input type="button" onclick="location.href='index.html';" value="Index"  class="bI"/>
+  <hr>
+
+  <div id="releases-container"></div>
+
+  <script>
+    // Genre category mapping
+    const genreMap = {
+      'M': 'METAL',
+      'MR': 'METALCORE',
+      'HR': 'HARD ROCK',
+      'A': 'ALTERNATIVE',
+      'P': 'PROGRESSIVE',
+      'R': 'ROCK',
+      'I': 'INDUSTRIAL',
+      'D': 'DEATH METAL',
+      'B': 'BLACK METAL',
+      'S': 'SLUDGE',
+      'G': 'GRUNGE',
+      'N': 'NU METAL',
+      'C': 'CLASSICAL',
+      'E': 'ELECTRONIC',
+      'F': 'FOLK',
+      'J': 'JAZZ',
+      'L': 'BLUES',
+      'O': 'OTHER'
+    };
+
+    // Genre category colors
+    const genreColors = {
+      'M': 'linear-gradient(to right, #81BB98, #9AD292)',
+      'MR': 'linear-gradient(to right, #81BB98, #9AD292)',
+      'HR': 'linear-gradient(to right, #EE702E, #F08933)',
+      'A': 'linear-gradient(to right, #7FB3D5, #85C1E9)',
+      'P': 'linear-gradient(to right, #AF7AC5, #BB8FCE)',
+      'R': 'linear-gradient(to right, #F39C12, #F5B041)',
+      'I': 'linear-gradient(to right, #566573, #707B7C)',
+      'D': 'linear-gradient(to right, #1B2631, #2E4053)',
+      'B': 'linear-gradient(to right, #17202A, #2C3E50)',
+      'S': 'linear-gradient(to right, #4A235A, #6C3483)',
+      'G': 'linear-gradient(to right, #145A32, #1E8449)',
+      'N': 'linear-gradient(to right, #78281F, #922B21)',
+      'C': 'linear-gradient(to right, #D4AC0D, #F1C40F)',
+      'E': 'linear-gradient(to right, #117A65, #148F77)',
+      'F': 'linear-gradient(to right, #BA4A00, #DC7633)',
+      'J': 'linear-gradient(to right, #5D6D7E, #7B7D7D)',
+      'L': 'linear-gradient(to right, #2874A6, #2E86C1)',
+      'O': 'linear-gradient(to right, #9B59B6, #A569BD)'
+    };
+
+    // my_type mapping
+    const typeMap = {
+      'v': 'v',
+      'd': 'd',
+      'x': 'x',
+      'o': 'o'
+    };
+
+    function getFullGenre(genreCategory) {
+      return genreMap[genreCategory] || genreCategory;
+    }
+
+    function getGenreColor(genreCategory) {
+      return genreColors[genreCategory] || genreColors['O'];
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function groupByDateAndGenre(releases) {
+      const grouped = {};
+      releases.forEach(release => {
+        const date = formatDate(release.update_date);
+        const genre = release.genre_category;
+        const key = `${date}_${genre}`;
+        
+        if (!grouped[key]) {
+          grouped[key] = {
+            date: date,
+            genre: genre,
+            releases: []
+          };
+        }
+        grouped[key].releases.push(release);
+      });
+      
+      // Sort keys by date (descending) then by genre
+      const sortedKeys = Object.keys(grouped).sort((a, b) => {
+        const [dateA, genreA] = a.split('_');
+        const [dateB, genreB] = b.split('_');
+        if (dateB !== dateA) {
+          return dateB.localeCompare(dateA);
+        }
+        return genreA.localeCompare(genreB);
+      });
+      
+      return sortedKeys.map(key => grouped[key]);
+    }
+
+    function createReleaseRow(release, index) {
+      const albumId = release.album_id;
+      const artist = release.artist;
+      const album = release.album;
+      const albumLink = release.album_link;
+      const albumLinkYM = release.album_link_ym || '';
+      const albumLinkZV = release.album_link_zv || '';
+      const coverLink = release.cover_link;
+      const highResCover = coverLink.replace('/296x296', '/10000x10000').replace('.webp', '.png').replace('bb', '999');
+      const myType = release.my_type || 'x';
+      
+      const ymButton = albumLinkYM 
+        ? `<a href="${albumLinkYM}" target="_blank"><button>Яндекс.Музыка</button></a>`
+        : `<a href="" target="_blank"><button disabled>Яндекс.Музыка</button></a>`;
+      
+      const zvButton = albumLinkZV
+        ? `<a href="${albumLinkZV}" target="_blank"><button>Звук</button></a>`
+        : `<a href="" target="_blank"><button disabled>Звук</button></a>`;
+
+      return `
+    <!-- ${artist} - ${album} -->
+    <tr style="display:table-row;" id='${myType}'>
+      <td><a href="${highResCover}" target="_blank"><img src="${coverLink}" height="100px"></a></td>
+      <td class="album_name"><a href="${albumLink}" target="_blank"><b>${artist}</b> - ${album}</a><br><br><button data-frame-load="${albumId}">Preview</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${ymButton}&nbsp;${zvButton}</td>
+    </tr> 
+    <tr style="display:none;" id="show${albumId}_"><td colspan="2"><iframe id="embedPlayer" data-frame-group="${albumId}" data-frame-src="https://embed.music.apple.com/us/album/${album.replace(/'/g, "\\'").replace(/&/g, '&amp;')}/${albumId}?app=music&amp;itsct=music_box_player&amp;itscg=30200&amp;ls=1&amp;theme=light" height="450px" frameborder="0" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation" allow="autoplay *; encrypted-media *; clipboard-write" style="width: 100%; overflow: hidden; border-radius: 10px; transform: translateZ(0px); animation: 2s ease 0s 6 normal none running loading-indicator; background-color: rgb(228, 228, 228);"></iframe></td></tr>`;
+    }
+
+    function renderReleases() {
+      fetch('Databases/new_releases.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load new_releases.json');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const groupedData = groupByDateAndGenre(data);
+          const container = document.getElementById('releases-container');
+          
+          let html = '';
+          let tableCounter = 1;
+          
+          groupedData.forEach(group => {
+            const dateGenreId = `${group.date.replace(/-/g, '')}_${getFullGenre(group.genre).toLowerCase().replace(/\s+/g, '_')}`;
+            const genreFullName = getFullGenre(group.genre);
+            const genreColor = getGenreColor(group.genre);
+            
+            html += `
+  <table border="1">
+    <tr id="${dateGenreId}"><th colspan="2" style="background: ${genreColor};">${group.date} | ${genreFullName}</th></tr>
+    <tr><th width="100px">Cover</th><th width="600px">Album</th></tr>`;
+            
+            group.releases.forEach((release, idx) => {
+              html += createReleaseRow(release, idx);
+            });
+            
+            html += `
+  </table>
+  <hr>`;
+          });
+          
+          container.innerHTML = html;
+          
+          // Add event listeners for Preview buttons
+          document.querySelectorAll('button[data-frame-load]').forEach(button => {
+            button.addEventListener('click', function() {
+              const albumId = this.getAttribute('data-frame-load');
+              const iframe = document.querySelector(`iframe[data-frame-group="${albumId}"]`);
+              if (iframe && iframe.getAttribute('data-frame-src')) {
+                iframe.src = iframe.getAttribute('data-frame-src');
+              }
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Error loading releases:', error);
+          document.getElementById('releases-container').innerHTML = 
+            '<p style="color: red; padding: 20px;">Error loading releases. Please ensure new_releases.json is available.</p>';
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', renderReleases);
+  </script>
+</body>
