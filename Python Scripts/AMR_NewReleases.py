@@ -28,7 +28,7 @@ LOGGER_ID = os.environ['tg_logger_id']
 YM_TOKEN = os.environ['ym_token']
 ZVUK_TOKEN = os.environ['zv_token']
 
-AMR_FOLDER = os.path.join(ROOT_FOLDER, 'AMRs/')
+AMR_FOLDER = os.path.join(ROOT_FOLDER, 'Website/AMRs/')
 DB_FOLDER = os.path.join(ROOT_FOLDER, 'Databases/')
 DB_FILE = os.path.join(DB_FOLDER, 'music_releases.db')
 
@@ -56,7 +56,7 @@ ZVUK_ERROR = ''
 HTML_HEAD = """<head>
   <meta charset="utf-8">
   <title>Alternative & Metal Releases</title>
-  <link rel="stylesheet" type="text/css" href="../../Resources/styles.css" />
+  <link rel="stylesheet" type="text/css" href="../Resources/styles.css" />
   <SCRIPT language=JavaScript type=text/JavaScript>
     <!--
     function show(id) {
@@ -98,7 +98,7 @@ HTML_HEAD = """<head>
   <input id="bX" type="button" value="O" onclick="show_tr('o');" class="bO" />
   <input id="bX" type="button" value="X" onclick="show_tr('x');" class="bX" />
   <input id="bE" type="button" value="  " onclick="show_tr('');" class="bE" />
-  <input type="button" onclick="location.href='../../index.html';" value="Index"  class="bI"/>
+  <input type="button" onclick="location.href='../index.html';" value="Index"  class="bI"/>
   <hr>\n"""
 
 HTML_END = """  </table>
@@ -534,7 +534,7 @@ def write_to_html(update_date, html_text, html_start):
     current_month = update_date[0:7]
     current_month_text = datetime.datetime.strptime(update_date, '%Y-%m-%d').strftime('%B')
 
-    with open(f'{ROOT_FOLDER}index.html', 'r') as index_file:
+    with open(f'{ROOT_FOLDER}Website/index.html', 'r') as index_file:
         last_month_index = index_file.read()
         last_month_slice = last_month_index[last_month_index.find('<a href="AMRs'):last_month_index.find('</a><br>')]
         last_month = last_month_slice[last_month_slice.rfind(' ') + 1:last_month_slice.rfind('.html">')]
@@ -546,7 +546,7 @@ def write_to_html(update_date, html_text, html_start):
 
     if current_year != last_year:
         is_new_year = True
-        with open(f'{ROOT_FOLDER}index.html', 'r+') as index_file:
+        with open(f'{ROOT_FOLDER}Website/index.html', 'r+') as index_file:
             index_content = index_file.read()
             index_content = index_content.replace(f'\n    <h2 class="title svelte-hprj71" data-testid="header-title">{last_year}:</h2>',
                                                   f'\n    <h2 class="title svelte-hprj71" data-testid="header-title">{current_year}:</h2>\n        <a href="AMRs/{current_year}/AMR {current_month}.html">{current_month_text}</a><br>\n    <h2 class="title svelte-hprj71" data-testid="header-title">{last_year}:</h2>')
@@ -555,7 +555,7 @@ def write_to_html(update_date, html_text, html_start):
     else:
         if current_month != last_month:
             is_new_month = True
-            with open(f'{ROOT_FOLDER}index.html', 'r+') as index_file:
+            with open(f'{ROOT_FOLDER}Website/index.html', 'r+') as index_file:
                 index_content = index_file.read()
                 index_content = index_content.replace(f'\n        <a href="AMRs/{last_year}/AMR {last_month}.html">{last_month_text}</a><br>',
                                                       f'\n        <a href="AMRs/{last_year}/AMR {last_month}.html">{last_month_text}</a> | \n        <a href="AMRs/{current_year}/AMR {current_month}.html">{current_month_text}</a><br>')
@@ -881,7 +881,7 @@ def coming_soon(category_link):
         date_time_now = date_time_now + datetime.timedelta(hours=3)
     html_li += make_html_li_final(date_time_now.strftime('%Y-%m-%d %H:%M:%S'))
 
-    with open(f'{ROOT_FOLDER}index.html', 'r+') as html_file:
+    with open(f'{ROOT_FOLDER}Website/index.html', 'r+') as html_file:
         html_content = html_file.read()
         change_block_position = html_content.find('      <div class="main-date">')
         change_block = html_content[change_block_position:]

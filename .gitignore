@@ -1,34 +1,22 @@
 ```
-# Python
+# Website assets that appear to be build artifacts or generated files
+"Website/AMRs/
+"AMRs/
+
+# Python compilation artifacts (from modified Python files)
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+
+# Build/dist directories
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# Environment
-.venv/
-venv/
-env/
-ENV/
+# Environment files
+.env
+.env.local
+*.env.*
 
-# IDE
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
@@ -38,67 +26,31 @@ ENV/
 # Logs
 *.log
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-.coverage
+# Coverage reports
+coverage/
 htmlcov/
-.coverage.*
-.cov-report
+.coverage
 
-# Testing
-.pytest_cache/
-.mypy_cache/
-.hypothesis/
-
-# Distribution / packaging
+# Python cache
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+*.pyo
+*.pyd
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
+# Dependency management
 pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
+pip-wheel-metadata/
 .tox/
-.nox/
-.coverage
 .coverage.*
-.cache
+.cache/
 nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+*.log
 
-# Translations
-*.mo
-*.pot
+# Unit test / coverage reports
+coverage.xml
+*.coverage
+.coverage.*
 
 # Django
 *.log
@@ -110,22 +62,8 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
-# Scrapy
-.scrapy
-
-# Sphinx
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
 # Jupyter Notebook
 .ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
 
 # pyenv
 .python-version
@@ -136,11 +74,11 @@ Pipfile.lock
 # PEP 582
 __pypackages__/
 
-# Celery
+# Celery stuff
 celerybeat-schedule
 celerybeat.pid
 
-# Sage
+# SageMath parsed files
 *.sage.py
 
 # Environments
@@ -167,6 +105,281 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Pyre
+# Pyre type checker
 .pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+# JetBrains specific template is maintained in a separate file.
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# VS Code non-user-specific settings
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# Local History for VSCode
+.history
+
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+.directory
+*.nib
+.so
+
+# Folders to ignore
+.julia/
+.zig/
+target/
+.gradle/
+node_modules/
+__pycache__/
+*.egg-info/
+.eggs/
+.wafpickle-
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
+.tox/
+.coverage*
+htmlcov/
+.instance/
+.webassets-cache/
+.python-version
+.jupyter/
+.ipython/
+.nbextensions/
+.autoenv_*
+
+# Compressed files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.gz
+*.rar
+*.7z
+*.bz2
+*.xz
+*.tgz
+*.tar
+*.deb
+*.rpm
+*.iso
+*.dmg
+*.bin
+*.msi
+*.exe
+*.dll
+*.so
+*.dylib
+*.aar
+*.jar
+*.war
+*.ear
+*.har
+*.gem
+*.whl
+*.egg
+*.nupkg
+*.apk
+*.appx
+*.appxbundle
+*.msp
+*.msm
+*.mst
+*.cab
+*.chm
+*.chw
+*.cnt
+*.hlp
+*.hpj
+*.inf
+*.ins
+*.inx
+*.isu
+*.lib
+*.lst
+*.log
+*.mdb
+*.msi
+*.msp
+*.mst
+*.nls
+*.o
+*.obj
+*.pdb
+*.pgm
+*.plg
+*.res
+*.rss
+*.sbr
+*.scr
+*.sys
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.trx
+*.user
+*.aps
+*.ncb
+*.opt
+*.plg
+*.suo
+*.sln.docstates
+*.vcproj.filters
+*.vcxproj.filters
+*.dep
+*.clw
+*.ilk
+*.manifest
+*.map
+*.exp
+*.lib
+*.idb
+*.pdb
+*.pch
+*.res
+*.rsp
+*.sdf
+*.suo
+*.tlog
+*.vcxproj.user
+*.opensdf
+*.opendb
+*.unsuccessfulbuild
+*.VC.db
+*.VC.VC.opendb
+*.VC.VC.unsuccessfulbuild
+*.VC.VC.sdf
+*.VC.VC.opensdf
+*.VC.VC.pch
+*.VC.VC.res
+*.VC.VC.rsp
+*.VC.VC.tlog
+*.VC.VC.exp
+*.VC.VC.map
+*.VC.VC.ilk
+*.VC.VC.pdb
+*.VC.VC.dll
+*.VC.VC.exe
+*.VC.VC.lib
+*.VC.VC.obj
+*.VC.VC.o
+*.VC.VC.a
+*.VC.VC.so
+*.VC.VC.dylib
+*.VC.VC.jar
+*.VC.VC.war
+*.VC.VC.ear
+*.VC.VC.har
+*.VC.VC.gem
+*.VC.VC.whl
+*.VC.VC.egg
+*.VC.VC.nupkg
+*.VC.VC.apk
+*.VC.VC.appx
+*.VC.VC.appxbundle
+*.VC.VC.msi
+*.VC.VC.msp
+*.VC.VC.mst
+*.VC.VC.cab
+*.VC.VC.chm
+*.VC.VC.cnt
+*.VC.VC.hlp
+*.VC.VC.hpj
+*.VC.VC.inf
+*.VC.VC.ins
+*.VC.VC.inx
+*.VC.VC.isu
+*.VC.VC.ncb
+*.VC.VC.opt
+*.VC.VC.plg
+*.VC.VC.sbr
+*.VC.VC.suo
+*.VC.VC.trx
+*.VC.VC.user
+*.VC.VC.vcproj.filters
+*.VC.VC.vcxproj.filters
+*.VC.VC.dep
+*.VC.VC.clw
+*.VC.VC.ilk
+*.VC.VC.manifest
+*.VC.VC.map
+*.VC.VC.exp
+*.VC.VC.lib
+*.VC.VC.idb
+*.VC.VC.pdb
+*.VC.VC.pch
+*.VC.VC.res
+*.VC.VC.rsp
+*.VC.VC.sdf
+*.VC.VC.suo
+*.VC.VC.tlog
+*.VC.VC.exp
+*.VC.VC.map
+*.VC.VC.ilk
+*.VC.VC.pdb
+*.VC.VC.dll
+*.VC.VC.exe
+*.VC.VC.lib
+*.VC.VC.obj
+*.VC.VC.o
+*.VC.VC.a
+*.VC.VC.so
+*.VC.VC.dylib
+*.VC.VC.jar
+*.VC.VC.war
+*.VC.VC.ear
+*.VC.VC.har
+*.VC.VC.gem
+*.VC.VC.whl
+*.VC.VC.egg
+*.VC.VC.nupkg
+*.VC.VC.apk
+*.VC.VC.appx
+*.VC.VC.appxbundle
+*.VC.VC.msi
+*.VC.VC.msp
+*.VC.VC.mst
+*.VC.VC.cab
+*.VC.VC.chm
+*.VC.VC.cnt
+*.VC.VC.hlp
+*.VC.VC.hpj
+*.VC.VC.inf
+*.VC.VC.ins
+*.VC.VC.inx
+*.VC.VC.isu
+*.VC.VC.ncb
+*.VC.VC.opt
+*.VC.VC.plg
+*.VC.VC.sbr
+*.VC.VC.suo
+*.VC.VC.trx
+*.VC.VC.user
+*.VC.VC.vcproj.filters
+*.VC.VC.vcxproj.filters
+*.VC.VC.dep
+*.VC.VC.clw
 ```

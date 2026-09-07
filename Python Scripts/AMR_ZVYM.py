@@ -27,7 +27,7 @@ LOGGER_ID = os.environ['tg_logger_id']
 YM_TOKEN = os.environ['ym_token']
 ZVUK_TOKEN = os.environ['zv_token']
 
-AMR_FOLDER = os.path.join(ROOT_FOLDER, 'AMRs/')
+AMR_FOLDER = os.path.join(ROOT_FOLDER, 'Website/AMRs/')
 DB_FOLDER = os.path.join(ROOT_FOLDER, 'Databases/')
 DB_FILE = os.path.join(DB_FOLDER, 'music_releases.db')
 

@@ -22,7 +22,7 @@ TOKEN: str = os.environ['tg_token']
 CHAT_ID: str = os.environ['tg_channel_id']
 LOGGER_ID: str = os.environ['tg_logger_id']
 
-AMR_FOLDER: str = os.path.join(ROOT_FOLDER, 'AMRs/')
+AMR_FOLDER: str = os.path.join(ROOT_FOLDER, 'Website/AMRs/')
 DB_FOLDER: str = os.path.join(ROOT_FOLDER, 'Databases/')
 DB_FILE: str = os.path.join(DB_FOLDER, 'music_releases.db')
 
