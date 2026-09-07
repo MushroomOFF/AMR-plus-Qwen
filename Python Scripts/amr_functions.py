@@ -1,17 +1,14 @@
 """ 
-# How to import from the same directory:
-import amr_functions as amr
+AMR Functions Module - Common utilities for Alternative & Metal Releases scripts
 
-# functions usage example:
-amr.print_name(SCRIPT_NAME, VERSION)
-
-amr.mdv2(text_line)
-
-amr.send_message(text, token, chat_id, image, topic)
-
-amr.logger(log_line, LOG_FILE, SCRIPT_NAME, *args)
-
-amr.db_backup(DB_FILE)
+Usage:
+    import amr_functions as amr
+    
+    amr.print_name(SCRIPT_NAME, VERSION)
+    amr.mdv2(text_line)
+    amr.send_message(text, token, chat_id, image, topic)
+    amr.logger(log_line, log_file, script_name, *args)
+    amr.db_backup(db_file)
 """
 
 import datetime
@@ -19,13 +16,23 @@ import json
 import os
 import requests
 import sqlite3
+from typing import Optional, Dict, List
 
 
-THREAD_ID_DICT = {'New Updates': 6, 'Top Releases': 10, 'Coming Soon': 3, 'New Releases': 2, 'Next Week Releases': 80, 'General': 0}
-TABLES = ['artists', 'my_releases', 'new_releases', 'soon_releases']
+THREAD_ID_DICT: Dict[str, int] = {
+    'New Updates': 6, 
+    'Top Releases': 10, 
+    'Coming Soon': 3, 
+    'New Releases': 2, 
+    'Next Week Releases': 80, 
+    'General': 0
+}
+
+TABLES: List[str] = ['artists', 'my_releases', 'new_releases', 'soon_releases']
 
 
-def print_name(script_name, version):
+def print_name(script_name: str, version: str) -> None:
+    """Print formatted script header with name and version."""
     print_line = f'{script_name} v.{version}'
     print_line_len = 30
     if len(print_line) > 28:
@@ -36,18 +43,23 @@ def print_name(script_name, version):
     print(f"{'':{'='}^{print_line_len}}\n")
 
 
-def mdv2(text):
+def mdv2(text: str) -> str:
     """
-    Экранирует спецсимволы для Telegram MarkdownV2.
-    Уже экранированные символы не экранируются повторно
+    Escape special characters for Telegram MarkdownV2.
+    Already escaped characters are not re-escaped.
+    
+    Args:
+        text: Raw text to escape
+        
+    Returns:
+        Escaped text safe for Telegram MarkdownV2
     """
     SPECIAL = '_*[]()~`>#+-=|{}.!'
     
-    def escape_special(s):
-        """Экранирует спецсимволы, кроме уже экранированных"""
+    def escape_special(s: str) -> str:
+        """Escape special characters, except already escaped ones."""
         result = []
         for i, c in enumerate(s):
-            # Не экранируем, если перед символом уже есть обратный слэш
             if c in SPECIAL and (i == 0 or s[i-1] != '\\'):
                 result.append('\\' + c)
             else:
@@ -56,11 +68,10 @@ def mdv2(text):
     
     result = []
     i = 0
-    
     is_bold_link = False
 
     while i < len(text):
-        # Code block: `...` — сохраняем как есть, без экранирования
+        # Code block: `...` — preserve as-is, no escaping
         if text[i] == '`':
             end = text.find('`', i + 1)
             if end != -1:
@@ -68,7 +79,7 @@ def mdv2(text):
                 i = end + 1
                 continue
         
-        # Link: [text](url) — экранируем контент внутри, но не структурные скобки
+        # Link: [text](url) — escape content but not structural brackets
         if text[i] == '[':
             bracket_end = text.find(']', i + 1)
             if bracket_end != -1 and bracket_end + 1 < len(text) and text[bracket_end+1] == '(':
@@ -85,7 +96,7 @@ def mdv2(text):
                         i = paren_end + 1
                     continue
         
-        # Bold/italic/strike: *...*, _..._, ~...~ — экранируем контент внутри, учитываем наличие ссылки внутри
+        # Bold/italic/strike: *...*, _..._, ~...~ — escape content inside
         if text[i] in '*_~':
             marker = text[i]
             end = text.find(marker, i + 1)
@@ -99,7 +110,7 @@ def mdv2(text):
                     i += 1
                 continue
         
-        # Обычный символ: экранируем, если это спецсимвол и он ещё не экранирован
+        # Regular character: escape if special and not already escaped
         c = text[i]
         if c in SPECIAL and (i == 0 or text[i-1] != '\\'):
             result.append('\\' + c)
@@ -107,15 +118,29 @@ def mdv2(text):
             result.append(c)
         i += 1
     
-    final_text = ''.join(result)
-    
-    return final_text
+    return ''.join(result)
 
 
-def send_message(text, token, chat_id, image, topic):
-    """Отправка сообщения в Telegram с обработкой ошибок и отладочным выводом"""
+def send_message(
+    text: str, 
+    token: str, 
+    chat_id: str, 
+    image: Optional[str], 
+    topic: Optional[str]
+) -> Optional[int]:
+    """
+    Send message to Telegram with error handling and debug output.
     
-    # Экранируем текст перед отправкой
+    Args:
+        text: Message text (will be escaped for MarkdownV2)
+        token: Telegram bot token
+        chat_id: Target chat ID
+        image: Optional image URL for photo messages
+        topic: Optional topic name for threaded messages
+        
+    Returns:
+        Message ID if successful, None otherwise
+    """
     escaped_text = mdv2(text)
 
     send_method = 'sendMessage'
@@ -124,90 +149,111 @@ def send_message(text, token, chat_id, image, topic):
         "chat_id": chat_id,
         "parse_mode": 'MarkdownV2'
     }
+    
     if image:
         send_method = 'sendPhoto'
         data_arguments.update({"photo": image, "caption": escaped_text})
+    
     if topic:
         data_arguments.update({"message_thread_id": THREAD_ID_DICT[topic]})
+    
     url = f"https://api.telegram.org/bot{token}/{send_method}"
 
     try:
         response = requests.post(url, data=data_arguments)
         json_response = json.loads(response.text)
-        # Если API вернул ошибку, ключа 'result' не будет — вызовется KeyError
         return json_response['result']['message_id']
         
     except KeyError:
-        # Telegram вернул ответ без ключа 'result' — сообщение не отправлено
-        # 🔍 ОТЛАДКА: выводим полный ответ API для диагностики
         print(f"🔍 Telegram API error response: {response.text}")
         print("❌ Ошибка отправки сообщения")
         
     except TypeError:
-        # На случай, если json_response не является словарём
         print(f"🔍 Telegram API unexpected response: {response.text}")
         print("❌ Ошибка отправки сообщения (некорректный формат ответа)")
         
     except requests.exceptions.RequestException as e:
-        # Ошибка сети, таймаут, недоступность API
         print(f"❌ Ошибка сети при отправке: {e}")
         
     except json.JSONDecodeError as e:
-        # Ответ не является валидным JSON
         print(f"❌ Ошибка парсинга JSON-ответа: {e}")
         print(f"🔍 Сырой ответ: {response.text if 'response' in locals() else 'N/A'}")    
 
     print(f"📄 Отправляемый текст: {escaped_text}")
     print('')
-    # 🔽 Попытка отправить уведомление об ошибке
+    
+    # Try to send error notification
     try:
-        logger_chat_id = os.environ['tg_logger_id']
-        error_msg = "Ошибка: сообщение отправить не удалось!"
-        error_url = f"https://api.telegram.org/bot{token}/sendMessage"
-        # Отправляем как plain text (без parse_mode), чтобы избежать циклических ошибок парсинга
-        error_data = {"chat_id": logger_chat_id, "text": error_msg}
-        requests.post(error_url, data=error_data, timeout=10)
-    except Exception as notif_err:
-        print(f"⚠️ Не удалось отправить уведомление об ошибке")
+        logger_chat_id = os.environ.get('tg_logger_id', '')
+        if logger_chat_id:
+            error_msg = "Ошибка: сообщение отправить не удалось!"
+            error_url = f"https://api.telegram.org/bot{token}/sendMessage"
+            error_data = {"chat_id": logger_chat_id, "text": error_msg}
+            requests.post(error_url, data=error_data, timeout=10)
+    except Exception:
+        print("⚠️ Не удалось отправить уведомление об ошибке")
 
     return None
 
 
-def logger(log_line, log_file, script_name, *args):
-    """Writing log line into log file
-    * For GitHub Actions:
-      - add +3 hours to datetime
-    * For Local scripts:
-      - print() without '▲','▼' and leading spaces
-      - additional conditions for print() without logging
+def logger(
+    log_line: str, 
+    log_file: str, 
+    script_name: str, 
+    *args: str
+) -> None:
+    """
+    Write log line to log file.
+    
+    For GitHub Actions:
+      - Add +3 hours to datetime
+    
+    For Local scripts:
+      - Print() without '▲','▼' and leading spaces
+      - Additional conditions for print() without logging
       
-      example - begin message:  logger(f'▲ v.{VERSION} [{ENV}]', 'noprint') # Begin
-      example - normal message: logger(f'ERROR: {check_file}')
-      example - end message:    logger(f'▼ DONE') # End
+    Args:
+        log_line: Log message content
+        log_file: Path to log file
+        script_name: Name of the script for log prefix
+        *args: Optional flags (e.g., 'noprint' to suppress console output)
     """
     if log_line[0] not in ['▲', '▼']:
         log_line = f'  {log_line}'
-    with open(log_file, 'r+') as log_file:
-        log_file_content = log_file.read()
-        log_file.seek(0, 0)
+    
+    with open(log_file, 'r+') as file:
+        log_file_content = file.read()
+        file.seek(0, 0)
         log_date = datetime.datetime.now()
+        
         if os.getenv("GITHUB_ACTIONS") == "true":
             log_date = log_date + datetime.timedelta(hours=3)
-        log_file.write(f'{log_date.strftime('%Y-%m-%d %H:%M:%S')} [{script_name}] {log_line.rstrip('\r\n')}\n{log_file_content}')
-    # print() for Local scripts only, if there's no 'noprint' parameter
+            
+        file.write(
+            f'{log_date.strftime("%Y-%m-%d %H:%M:%S")} '
+            f'[{script_name}] {log_line.rstrip(chr(13) + chr(10))}\n'
+            f'{log_file_content}'
+        )
+    
+    # Print for Local scripts only, if there's no 'noprint' parameter
     if not os.getenv("GITHUB_ACTIONS"):
         if 'noprint' not in args:
             print(log_line[2:])
 
 
-def db_backup(db_file):
-    """Backup DB as tables in JSON files"""
-    db_name = os.path.split(db_file)
-    db_backup_folder = os.path.join(db_name[0], 'Backups/')
+def db_backup(db_file: str) -> None:
+    """
+    Backup database tables to JSON files.
+    
+    Args:
+        db_file: Path to SQLite database file
+    """
+    db_path, db_name = os.path.split(db_file)
+    db_backup_folder = os.path.join(db_path, 'Backups/')
 
     print('')
     if not os.path.exists(db_file):
-        print(f"Ошибка: база данных '{db_name[1]}' не найдена в папке'{db_name[0]}'.")
+        print(f"Ошибка: база данных '{db_name}' не найдена в папке '{db_path}'.")
         return
 
     conn = sqlite3.connect(db_file)
