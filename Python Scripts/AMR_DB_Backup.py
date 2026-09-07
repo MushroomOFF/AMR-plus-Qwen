@@ -6,7 +6,7 @@ from typing import List
 # ================= CONSTANTS & VARIABLES =================
 ROOT_FOLDER: str = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
 DB_FOLDER: str = os.path.join(ROOT_FOLDER, 'Databases/')
-DB_BACKUP_FOLDER: str = os.path.join(DB_FOLDER, 'Backups/')
+DB_BACKUP_FOLDER: str = DB_FOLDER  # Backups are now directly in Databases folder
 DB_FILE: str = os.path.join(DB_FOLDER, 'music_releases.db')
 TABLES: List[str] = ['artists', 'my_releases', 'new_releases', 'soon_releases']
 
