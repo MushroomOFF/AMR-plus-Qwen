@@ -1,9 +1,37 @@
 import datetime
 import os
-import requests
-import sqlite3
-import traceback
 from typing import Optional, Dict, Any, List
+
+# Lazy imports to reduce startup time
+_requests = None
+_sqlite3 = None
+_traceback = None
+
+
+def _get_requests():
+    global _requests
+    if _requests is None:
+        import requests
+        _requests = requests
+    return _requests
+
+
+def _get_sqlite3():
+    global _sqlite3
+    if _sqlite3 is None:
+        import sqlite3
+        _sqlite3 = sqlite3
+    return _sqlite3
+
+
+def _get_traceback():
+    global _traceback
+    if _traceback is None:
+        import traceback
+        _traceback = traceback
+    return _traceback
+
+
 import amr_functions as amr
 
 # ================= CONSTANTS & VARIABLES =================
@@ -90,6 +118,7 @@ def image_download(file_name: str, folder: str, link: str) -> None:
         folder: The subfolder within COVERS_FOLDER to save the file.
         link: The URL of the image to download.
     """
+    requests = _get_requests()
     file_name = replace_symbols(file_name)
     folder = replace_symbols(folder)
     folder_path = os.path.join(COVERS_FOLDER, folder)
@@ -112,6 +141,8 @@ def count_covers_to_download() -> Optional[int]:
     Returns:
         The count of covers to download, or None if an error occurs.
     """
+    sqlite3 = _get_sqlite3()
+    traceback = _get_traceback()
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -137,6 +168,8 @@ def get_cover_to_download() -> Optional[Dict[str, Any]]:
     Returns:
         A dictionary with cover information, or None if no covers remain or an error occurs.
     """
+    sqlite3 = _get_sqlite3()
+    traceback = _get_traceback()
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -175,6 +208,8 @@ def update_cover_downloaded(row_id: int, date_of_update: str) -> bool:
     Returns:
         True if successful, False otherwise.
     """
+    sqlite3 = _get_sqlite3()
+    traceback = _get_traceback()
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -193,6 +228,7 @@ def main() -> None:
     """Main entry point for the Covers Downloader script."""
     amr.print_name(SCRIPT_NAME, VERSION)
 
+    requests = _get_requests()
     session = requests.Session() 
     session.headers.update({
         'Referer': 'https://itunes.apple.com',

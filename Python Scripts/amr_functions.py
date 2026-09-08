@@ -14,9 +14,27 @@ Usage:
 import datetime
 import json
 import os
-import requests
-import sqlite3
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
+
+# Lazy import for requests to avoid overhead when not used
+_requests = None
+_sqlite3 = None
+
+
+def _get_requests():
+    global _requests
+    if _requests is None:
+        import requests
+        _requests = requests
+    return _requests
+
+
+def _get_sqlite3():
+    global _sqlite3
+    if _sqlite3 is None:
+        import sqlite3
+        _sqlite3 = sqlite3
+    return _sqlite3
 
 
 THREAD_ID_DICT: Dict[str, int] = {
@@ -141,6 +159,7 @@ def send_message(
     Returns:
         Message ID if successful, None otherwise
     """
+    requests = _get_requests()
     escaped_text = mdv2(text)
 
     send_method = 'sendMessage'
@@ -221,12 +240,15 @@ def logger(
     if log_line[0] not in ['▲', '▼']:
         log_line = f'  {log_line}'
     
+    is_github = os.getenv("GITHUB_ACTIONS") == "true"
+    should_print = 'noprint' not in args
+    
     with open(log_file, 'r+') as file:
         log_file_content = file.read()
         file.seek(0, 0)
         log_date = datetime.datetime.now()
         
-        if os.getenv("GITHUB_ACTIONS") == "true":
+        if is_github:
             log_date = log_date + datetime.timedelta(hours=3)
             
         file.write(
@@ -236,9 +258,8 @@ def logger(
         )
     
     # Print for Local scripts only, if there's no 'noprint' parameter
-    if not os.getenv("GITHUB_ACTIONS"):
-        if 'noprint' not in args:
-            print(log_line[2:])
+    if not is_github and should_print:
+        print(log_line[2:])
 
 
 def db_backup(db_file: str) -> None:
@@ -248,6 +269,7 @@ def db_backup(db_file: str) -> None:
     Args:
         db_file: Path to SQLite database file
     """
+    sqlite3 = _get_sqlite3()
     db_path, db_name = os.path.split(db_file)
     db_backup_folder = os.path.join(db_path, 'Backups/')
 
