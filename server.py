@@ -4,14 +4,15 @@
 В продакшене (на GitHub Pages) вместо него работает GitHub API — см. releases.js.
 
 Структура проекта:
-    server.py                 <- этот файл (в корне)
+    server.py                    <- этот файл (в корне)
     website/releases.html
     website/releases.css
     website/releases.js
     website/new_releases.json
 
-Запуск: python server.py   (из корня проекта)
-Адрес:  http://localhost:8000/releases.html
+Запуск:  python server.py        (из любой папки)
+Адрес:   http://localhost:8000/releases.html
+Вход:    токен (по умолчанию — см. вывод при запуске)
 """
 import http.server
 import socketserver
@@ -22,16 +23,18 @@ import urllib.parse
 from datetime import datetime
 
 PORT = 8000
-WEBSITE_DIR = 'website'                 # папка с файлами сайта
-HTML_FILE = 'releases.html'             # относительно WEBSITE_DIR
-JSON_FILE = os.path.join(WEBSITE_DIR, 'new_releases.json')  # относительно корня
 
-ADMIN_LOGIN = os.environ.get('ADMIN_LOGIN', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin2026')
+# Пути привязаны к расположению этого файла — запускать можно откуда угодно
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WEBSITE_DIR = os.path.join(BASE_DIR, 'website')
+HTML_FILE = 'releases.html'                    # относительно WEBSITE_DIR
+JSON_FILE = os.path.join(WEBSITE_DIR, 'new_releases.json')  # для чтения/записи
+
+ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', 'amr_admin_2026')
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    # Раздаём файлы из папки website
+    # Раздаём статику из папки website
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEBSITE_DIR, **kwargs)
 
@@ -55,11 +58,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def handle_verify(self):
         try:
             data = self.read_body()
-            login = data.get('login', '')
-            password = data.get('password', '')
-            ok = (login == ADMIN_LOGIN and password == ADMIN_PASSWORD)
+            ok = data.get('token') == ADMIN_TOKEN
             self.send_json(
-                {'success': ok, 'message': 'OK' if ok else 'Неверный логин или пароль'},
+                {'success': ok, 'message': 'OK' if ok else 'Неверный токен'},
                 200 if ok else 403
             )
         except Exception as e:
@@ -68,13 +69,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def handle_update_my_type(self):
         try:
             data = self.read_body()
-            login = data.get('login', '')
-            password = data.get('password', '')
+            token = data.get('token', '')
             row_id = data.get('row_id')
             new_type = data.get('new_type', '').strip()
 
-            if login != ADMIN_LOGIN or password != ADMIN_PASSWORD:
-                self.send_json({'success': False, 'message': 'Неверный логин или пароль'}, 403)
+            if token != ADMIN_TOKEN:
+                self.send_json({'success': False, 'message': 'Неверный токен'}, 403)
                 return
 
             if row_id is None or new_type not in ('v', 'd', 'o', 'x'):
@@ -94,7 +94,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 rid = r.get('row_id') if 'row_id' in r else r.get('row_id ')
                 if str(rid) == str(row_id):
                     old_type = r.get('my_type') or r.get('my_type ')
-                    # Обновляем оба варианта ключа (из-за бага с пробелами)
+                    # Обновляем оба варианта ключа (из-за бага с пробелами в ключах)
                     if 'my_type' in r:
                         r['my_type'] = new_type
                     if 'my_type ' in r:
@@ -138,16 +138,15 @@ def main():
     print("=" * 60)
     print("🎵 AMR Server — локальная разработка")
     print("=" * 60)
-    print(f"📁 Сайт:    {os.path.abspath(WEBSITE_DIR)}")
-    print(f"📄 JSON:    {os.path.abspath(JSON_FILE)}")
+    print(f"📁 Сайт:    {WEBSITE_DIR}")
+    print(f"📄 JSON:    {JSON_FILE}")
     print(f"🌐 Страница: http://localhost:{PORT}/{HTML_FILE}")
-    print(f"👤 Логин:   {ADMIN_LOGIN}")
-    print(f"🔑 Пароль:  {ADMIN_PASSWORD}")
+    print(f"🔐 Токен:   {ADMIN_TOKEN}")
     print("=" * 60)
 
     if not os.path.isdir(WEBSITE_DIR):
         print(f"❌ ОШИБКА: папка '{WEBSITE_DIR}' не найдена!")
-        print("   Запускайте сервер из корня проекта.")
+        print("   Проверьте структуру проекта (см. шапку файла).")
         sys.exit(1)
 
     if not os.path.exists(JSON_FILE):
