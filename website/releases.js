@@ -63,6 +63,30 @@ function b64EncodeUtf8(str) {
   return btoa(bin);
 }
 
+// Чтение файла из репозитория с поддержкой файлов больше 1 МБ
+async function ghReadRepoFile() {
+  const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.file}?ref=${GH.branch}`;
+  const get = await fetch(url, { headers: ghHeaders() });
+  if (!get.ok) throw new Error('Не удалось прочитать файл из GitHub');
+  const meta = await get.json();
+  const sha = meta.sha;
+
+  let text;
+  if (meta.content && meta.encoding === 'base64') {
+    // Файл меньше 1 МБ — содержимое уже в ответе
+    text = b64DecodeUtf8(meta.content);
+  } else if (meta.download_url) {
+    // Файл больше 1 МБ — скачиваем сырое содержимое
+    const raw = await fetch(meta.download_url, { headers: ghHeaders() });
+    if (!raw.ok) throw new Error('Не удалось скачать файл из GitHub');
+    text = await raw.text();
+  } else {
+    throw new Error('GitHub не вернул содержимое файла');
+  }
+
+  return { sha, data: JSON.parse(text) };
+}
+
 // ====== УТИЛИТЫ ======
 function cleanData(raw) {
   return raw.map(item => {
@@ -239,12 +263,8 @@ async function updateMyType(rowId, newType, btnEl) {
       const data = await r.json();
       if (!data.success) throw new Error(data.message);
     } else {
-      // Читаем файл из репозитория, меняем, коммитим обратно
-      const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.file}`;
-      const get = await fetch(`${url}?ref=${GH.branch}`, { headers: ghHeaders() });
-      if (!get.ok) throw new Error('Не удалось прочитать файл из GitHub');
-      const meta = await get.json();
-      const data = JSON.parse(b64DecodeUtf8(meta.content));
+      // Читаем файл из репозитория (с поддержкой > 1 МБ), меняем, коммитим обратно
+      const { sha, data } = await ghReadRepoFile();
 
       let found = false;
       for (const r of data) {
@@ -257,13 +277,14 @@ async function updateMyType(rowId, newType, btnEl) {
       }
       if (!found) throw new Error('row_id не найден в JSON');
 
+      const url = `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.file}`;
       const put = await fetch(url, {
         method: 'PUT',
         headers: { ...ghHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: `releases: row_id=${rowId} my_type '${oldType || ''}' -> '${newType}'`,
           content: b64EncodeUtf8(JSON.stringify(data, null, 1) + '\n'),
-          sha: meta.sha,
+          sha: sha,
           branch: GH.branch
         })
       });
