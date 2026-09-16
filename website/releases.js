@@ -6,7 +6,7 @@ const MONTHS_RU = ['Январь','Февраль','Март','Апрель','М
 // ====== КОНФИГ GitHub (для работы в сети) ======
 const GH = {
   owner: 'MushroomOFF',
-  repo: 'mushroomoff.github.io',
+  repo: 'AMR-plus-Qwen',
   branch: 'main',
   file: 'website/new_releases.json'   // путь внутри репозитория
 };
