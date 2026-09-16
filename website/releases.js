@@ -75,13 +75,16 @@ async function ghReadRepoFile() {
   if (meta.content && meta.encoding === 'base64') {
     // Файл меньше 1 МБ — содержимое уже в ответе
     text = b64DecodeUtf8(meta.content);
-  } else if (meta.download_url) {
-    // Файл больше 1 МБ — скачиваем сырое содержимое
-    const raw = await fetch(meta.download_url, { headers: ghHeaders() });
-    if (!raw.ok) throw new Error('Не удалось скачать файл из GitHub');
-    text = await raw.text();
   } else {
-    throw new Error('GitHub не вернул содержимое файла');
+    // Файл больше 1 МБ — читаем через git/blobs API (обходит CORS raw.githubusercontent.com)
+    const blobUrl = `https://api.github.com/repos/${GH.owner}/${GH.repo}/git/blobs/${sha}`;
+    const blob = await fetch(blobUrl, { headers: ghHeaders() });
+    if (!blob.ok) throw new Error('Не удалось прочитать blob из GitHub');
+    const blobData = await blob.json();
+    if (blobData.encoding !== 'base64' || !blobData.content) {
+      throw new Error('GitHub не вернул содержимое blob');
+    }
+    text = b64DecodeUtf8(blobData.content);
   }
 
   return { sha, data: JSON.parse(text) };
