@@ -563,12 +563,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   loadData();
 });
-
-// ====== СЖАТИЕ ШАПКИ ПРИ ПРОКРУТКЕ ======
-(function () {
-  const headerEl = document.querySelector('header');
-  if (!headerEl) return;
-  const onScroll = () => headerEl.classList.toggle('collapsed', window.scrollY > 60);
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-})();
