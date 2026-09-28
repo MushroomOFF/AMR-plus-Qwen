@@ -1,8 +1,0 @@
-.DS_Store
-*DS_Store*
-.ipynb_checkpoints/
-Covers/
-Python Scripts/__pycache__/
-Python Scripts/.ipynb_checkpoints/
-*.env
-.env
