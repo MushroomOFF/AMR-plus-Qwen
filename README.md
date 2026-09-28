@@ -66,8 +66,9 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r "Python Scripts/requirements.txt"
 ```
 
-Then follow the **[Local Run Tutorial](docs/LOCAL_RUN_TUTORIAL.md)** to set up
-the project on your own machine with **your own personal artists list**.
+Then follow the **[Full Setup Tutorial](TUTORIAL.md)** to run the project on
+your own machine — or in your own GitHub Actions — with **your own personal
+artists list** (no tokens required for the basic pipeline).
 
 ## Scripts reference
 
@@ -83,9 +84,11 @@ the project on your own machine with **your own personal artists list**.
 | `AMR_CoversRenamer.py` | Rename large cover files | no |
 | `server.py` | Local web server for editing/publishing releases | yes |
 
-> **Note:** most scripts contain a hard-coded `ROOT_FOLDER` pointing to the
-> author's machine. When running locally, edit it to your repository path —
-> see the tutorial.
+> **Note:** most scripts compute `ROOT_FOLDER` relative to their own location,
+> so they work out of the box on any machine. Only `server.py` contains a
+> hard-coded path to the author's machine — edit it when running locally.
+> See the **[Tutorial](TUTORIAL.md)** for details, including how to set up
+> GitHub Actions and GitHub Pages in your own repository.
 
 ## License
 
