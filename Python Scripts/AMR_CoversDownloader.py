@@ -1,124 +1,58 @@
 import datetime
 import os
-from typing import Optional, Dict, Any, List
-
-# Lazy imports to reduce startup time
-_requests = None
-_sqlite3 = None
-_traceback = None
-
-
-def _get_requests():
-    global _requests
-    if _requests is None:
-        import requests
-        _requests = requests
-    return _requests
-
-
-def _get_sqlite3():
-    global _sqlite3
-    if _sqlite3 is None:
-        import sqlite3
-        _sqlite3 = sqlite3
-    return _sqlite3
-
-
-def _get_traceback():
-    global _traceback
-    if _traceback is None:
-        import traceback
-        _traceback = traceback
-    return _traceback
-
-
+import requests
+import sqlite3
+import traceback
 import amr_functions as amr
 
 # ================= CONSTANTS & VARIABLES =================
-SCRIPT_NAME: str = "Covers Downloader"
-VERSION: str = "2.026.07"
+SCRIPT_NAME = "Covers Downloader"
+VERSION = "2.026.07"
 
-ROOT_FOLDER: str = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
-DB_FOLDER: str = os.path.join(ROOT_FOLDER, 'Databases/')
-DB_FILE: str = os.path.join(DB_FOLDER, 'music_releases.db')
-COVERS_FOLDER: str = os.path.join(ROOT_FOLDER, 'Covers/Fresh Covers to Check/')
+ROOT_FOLDER = '/Users/mushroomoff/Yandex.Disk.localized/GitHub/mushroomoff.github.io/'
+DB_FOLDER = os.path.join(ROOT_FOLDER, 'Databases/')
+DB_FILE = os.path.join(DB_FOLDER, 'music_releases.db')
+COVERS_FOLDER = os.path.join(ROOT_FOLDER, 'Covers/Fresh Covers to Check/')
 
-
+# ================= FUNCTIONS =================
 def clean_folder_name(text: str) -> str:
-    """
-    Clean a text string for use as a folder name.
-    
-    Removes or replaces forbidden characters ((),/:.) and normalizes whitespace.
-    
-    Args:
-        text: The text to clean.
-    
-    Returns:
-        A cleaned string suitable for use as a folder name.
-    """
     forbidden = set('()/:.')
-    result: List[str] = []
-    
-    # Iterate through the text to process forbidden characters
+    result = []
+    # Проходим по исходному тексту, чтобы соседи не "съехали" во время обработки
     for i, char in enumerate(text):
         if char in forbidden:
             left = text[i-1] if i > 0 else None
             right = text[i+1] if i < len(text) - 1 else None
-            # Replace with space only if surrounded by non-spaces on both sides
+            # Заменяем на пробел только если символ окружён не-пробелами с обеих сторон
             if left is not None and right is not None and left != ' ' and right != ' ':
                 result.append(' ')
-            # Otherwise, the character is simply removed
+            # В противном случае (начало/конец строки или рядом уже есть пробел) символ просто удаляется
         else:
             result.append(char)
-    
-    # Join the result, collapse multiple spaces into one, and trim edges
+    # Собираем строку, схлопываем множественные пробелы в один и убираем пробелы по краям
     return ' '.join(''.join(result).split())
 
 
-def is_jp_chars(text: str) -> bool:
-    """
-    Check if a text contains Japanese characters.
-    
-    Args:
-        text: The text to check.
-    
-    Returns:
-        True if Japanese characters are found, False otherwise.
-    """
-    return any(
-        0x3040 <= ord(ch) <= 0x309F or   # Hiragana
-        0x30A0 <= ord(ch) <= 0x30FF or   # Katakana
-        0x4E00 <= ord(ch) <= 0x9FFF      # Kanji (CJK Unified Ideographs)
-        for ch in text
-    )
+def is_jp_chars(text: str):
+    # Проверяем каждый символ по его Unicode-коду
+    if any(0x3040 <= ord(ch) <= 0x309F or  # Хирагана
+           0x30A0 <= ord(ch) <= 0x30FF or  # Катакана
+           0x4E00 <= ord(ch) <= 0x9FFF     # Кандзи (CJK Unified Ideographs)
+           for ch in text):
+        return True
+    return False
 
 
-def replace_symbols(text_line: str) -> str:
-    """
-    Replace symbols that are invalid in file names and folder paths.
-    
-    Args:
-        text_line: The text to process.
-    
-    Returns:
-        The text with invalid symbols replaced by underscores.
-    """
+def replace_symbols(text_line):
+    """Replacing unused characters in file names and folder paths"""
     symbols_to_replace = '\\/*:?<>|`"'
     for symbol in symbols_to_replace:
         text_line = text_line.replace(symbol, '_')
     return text_line
 
 
-def image_download(file_name: str, folder: str, link: str) -> None:
-    """
-    Download an image from a URL and save it to a specified folder.
-    
-    Args:
-        file_name: The base name for the saved file.
-        folder: The subfolder within COVERS_FOLDER to save the file.
-        link: The URL of the image to download.
-    """
-    requests = _get_requests()
+def image_download(file_name, folder, link):
+    """Image downloading"""
     file_name = replace_symbols(file_name)
     folder = replace_symbols(folder)
     folder_path = os.path.join(COVERS_FOLDER, folder)
@@ -134,15 +68,8 @@ def image_download(file_name: str, folder: str, link: str) -> None:
             file.write(response.content)
 
 
-def count_covers_to_download() -> Optional[int]:
-    """
-    Count the number of covers remaining to download.
-    
-    Returns:
-        The count of covers to download, or None if an error occurs.
-    """
-    sqlite3 = _get_sqlite3()
-    traceback = _get_traceback()
+def count_covers_to_download():
+    """Count covers to download"""
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -156,60 +83,34 @@ def count_covers_to_download() -> Optional[int]:
             return int(result[0])
         return None
     except Exception as e:
-        print(f'Error counting covers to download: {e}')
+        print(f'Error counting covers to donwnload: {e}')
         traceback.print_exc()
         return None
 
 
-def get_cover_to_download() -> Optional[Dict[str, Any]]:
-    """
-    Get the next cover record to download from the database.
-    
-    Returns:
-        A dictionary with cover information, or None if no covers remain or an error occurs.
-    """
-    sqlite3 = _get_sqlite3()
-    traceback = _get_traceback()
+def get_cover_to_download():
+    """Get cover to download"""
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT row_id, main_artist, artist, album, release_date, cover_link  
-            FROM my_releases 
+            SELECT row_id, main_artist, artist, album, release_date, cover_link  FROM my_releases 
             WHERE cover_download_date IS NULL
             LIMIT 1
         ''')
         result = cursor.fetchone()
         conn.close()
         if result:
-            return {
-                'row_id': result[0],
-                'main_artist': result[1],
-                'artist': result[2],
-                'album': result[3],
-                'release_date': result[4],
-                'cover_link': result[5]
-            }
+            return {'row_id': result[0], 'main_artist': result[1], 'artist': result[2], 'album': result[3], 'release_date': result[4], 'cover_link': result[5]}
         return None
     except Exception as e:
-        print(f'Error getting cover to download: {e}')
+        print(f'Error getting cover to donwnload: {e}')
         traceback.print_exc()
         return None
 
 
-def update_cover_downloaded(row_id: int, date_of_update: str) -> bool:
-    """
-    Update the cover download date for a release record.
-    
-    Args:
-        row_id: The row ID of the release to update.
-        date_of_update: The date/time string to store.
-    
-    Returns:
-        True if successful, False otherwise.
-    """
-    sqlite3 = _get_sqlite3()
-    traceback = _get_traceback()
+def update_cover_downloaded(row_id, date_of_update):
+    """Обновить дату обработки артиста (сохранение прогресса)"""
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -224,11 +125,9 @@ def update_cover_downloaded(row_id: int, date_of_update: str) -> bool:
         return False
 
 
-def main() -> None:
-    """Main entry point for the Covers Downloader script."""
+def main():
     amr.print_name(SCRIPT_NAME, VERSION)
 
-    requests = _get_requests()
     session = requests.Session() 
     session.headers.update({
         'Referer': 'https://itunes.apple.com',
@@ -238,17 +137,15 @@ def main() -> None:
     while True:
         covers_count = count_covers_to_download()
         cover_to_download = get_cover_to_download()
-        
         if not cover_to_download:
-            print("\nAll covers downloaded, nothing left to download...")
+            print("\nВсё скачано, качать нечего...")
             break
 
         row_id = int(cover_to_download['row_id'])
 
-        # Clean artist name for folder (remove forbidden characters: /, :, (, ), . at end)
+        # Убираем из имени Исполнителя символы, которые недопустимы в имени папки ('/', ':', '(', ')', '.' в конце)
         artist_folder_name = clean_folder_name(str(cover_to_download['main_artist']))
-        
-        # Check for Japanese characters. If found, use the uncleaned main_artist
+        # Проверяем на наличие японских символов. Если находим, мяеняем на "неочищенное" mainArtist
         non_JP_artist_name = str(cover_to_download['artist'])
         if is_jp_chars(non_JP_artist_name):
             non_JP_artist_name = str(cover_to_download['main_artist'])
